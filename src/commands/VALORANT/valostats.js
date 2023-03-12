@@ -30,45 +30,53 @@ module.exports = {
 
         await interaction.deferReply()
         
-        const userData = await valorant1.getUserData(user, tagline)
+        const { Account_Data, MMR_Data } = await valorant1.getUserData(user, tagline)
 
-        const Wins = []
-        const Games = []
-        Object.entries(userData.MMR_Data.data.by_season).map( ([key, val] = entry) => {
+        var TotalWins = 0
+        var TotalMatches = 0
+        Object.entries(MMR_Data.data.by_season).map(([key, val]) => {
             if(val.wins != undefined){
-                Wins.push(val.wins)
+                TotalWins += val.wins
             }
             if(val.number_of_games != undefined){
-                Games.push(val.number_of_games)
+                TotalMatches += val.number_of_games
             }
         })
 
-        var totalWins = 0
-        Wins.forEach(win => {
-            totalWins += win
-        })
-        var totalGames = 0
-        Games.forEach(game => {
-            totalGames += game
-        })
+        console.log(Account_Data)
+        Account = {
+            Name: Account_Data.data.name,
+            Tagline: Account_Data.data.tag,
+            Level: Account_Data.data.account_level || "0",
+            Card: Account_Data.data.card.wide || "https://media.valorant-api.com/playercards/b9e318c3-4590-d095-0218-ac92e1405459/wideart.png",
+            LRR: MMR_Data.data.current_data.mmr_change_to_last_game || "0",
+            Elo: MMR_Data.data.current_data.elo || "0",
+            Matches: TotalMatches,
+            Wins: TotalWins,
+            Winrate: Math.floor(Math.round(TotalWins / TotalMatches * 100)) + "%",
+            Peek: MMR_Data.data.highest_rank.patched_tier || "Unranked",
+            PeekAct: MMR_Data.data.highest_rank.season || "",
+            CurrentRank: MMR_Data.data.current_data.currenttierpatched || "Unranked",
+            RankImage: MMR_Data.data.current_data.images.small.includes("null") ? "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/0/smallicon.png" : MMR_Data.data.current_data.images.small
+        }
 
         client.basicEmbed({
             type: "editReply",
-            title: `Valorant Alltime Stats [${userData.Account_Data.data.name + "#" + userData.Account_Data.data.tag}]`,
-            author: {name: `Stats requested by ${interaction.user.tag}`, iconURL: `${interaction.user.displayAvatarURL() || interaction.user.defaultAvatarURL}`},
-            thumbnail: `${userData.MMR_Data.data.current_data.images.small}`,
+            thumbnail: `${Account.RankImage}`,
+            image: `${Account.Card}`,
+            author: {name: `Stats requested by ${interaction.user.tag}`, iconURL: `${interaction.user.displayAvatarURL()}`},
+            title: `Valorant Competitive Stats [${Account.Name + "#" + Account.Tagline}]`,
             fields: [
-                { name: "Last Rank Rating", value: `${userData.MMR_Data.data.current_data.mmr_change_to_last_game}`, inline: true},
-                { name: "MMR (Elo)", value: `${userData.MMR_Data.data.current_data.elo}`, inline: true},
-                { name: "\u200b", value: "\u200b",inline: true},
-                { name: "Matches", value: `${totalGames}`, inline: true},
-                { name: "Wins", value: `${totalWins}`, inline: true},
-                { name: "Winrate", value: `${Math.floor(Math.round(totalWins / totalGames * 100))}%`, inline: true},
-                { name: "Peek Rank", value: `${userData.MMR_Data.data.highest_rank.patched_tier}\nin ${userData.MMR_Data.data.highest_rank.season[0].toUpperCase() + userData.MMR_Data.data.highest_rank.season[1] + ":" + userData.MMR_Data.data.highest_rank.season[2].toUpperCase() + userData.MMR_Data.data.highest_rank.season[3]}`, inline: true},
-                { name: "Current Rank", value: `${userData.MMR_Data.data.current_data.currenttierpatched}`, inline: true},
-                { name: "Account Level", value: `${userData.Account_Data.data.account_level}`, inline: true}                
+                {name: "Last Rank Rating", value: `${Account.LRR}`, inline: true},
+                {name: "MMR (Elo)", value: `${Account.Elo}`, inline: true},
+                {name: "\u200b", value: "\u200b", inline: true},
+                {name: "Matches", value: `${Account.Matches}`, inline: true},
+                {name: "Wins", value: `${Account.Wins}`, inline: true},
+                {name: "Winrate", value: `${Account.Winrate}`, inline: true},
+                {name: "Peek Rank", value: `${Account.Peek} ${Account.PeekAct ? `\nin ${Account.PeekAct[0].toUpperCase() + Account.PeekAct[1] + ":" + Account.PeekAct[2].toUpperCase() + Account.PeekAct[3]}` : ""}`, inline: true},
+                {name: "Current Rank", value: `${Account.CurrentRank}`, inline: true},
+                {name: "Account Level", value: `${Account.Level}`, inline: true}
             ],
-            image: `${userData.Account_Data.data.card.wide}`      
         }, interaction)
     }
 }
