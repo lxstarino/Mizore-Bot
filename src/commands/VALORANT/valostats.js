@@ -43,7 +43,6 @@ module.exports = {
             }
         })
 
-        console.log(Account_Data)
         Account = {
             Name: Account_Data.data.name,
             Tagline: Account_Data.data.tag,
