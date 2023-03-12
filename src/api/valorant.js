@@ -27,10 +27,7 @@ class valorant{
             .then(response => response.json())
             .catch(() => {throw "An error occured while fetching Player Data"})
 
-        if(MMR_Data.status == "404" || Account_Data.status == "404") throw "Valorant Player not found"
-        if(MMR_Data.status == "429" || Account_Data.status == "429") throw "Rate limited"
-        if(MMR_Data.status == "400" || Account_Data.status == "400") throw "Not able to connect to API"
-        if(MMR_Data.data.length == 0 || Account_Data.data.length == 0) throw "No Valorant Player Data found"
+        if(MMR_Data.status != 200 || Account_Data.status != 200) throw "Not able to contact API"
 
         return{
             MMR_Data: MMR_Data,
