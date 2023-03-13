@@ -43,7 +43,7 @@ module.exports = {
                 url: "https://cdn.discordapp.com/emojis/1081204083970543686.png"
             },
             VALORANT: {
-                emoji: `${client.emojis.cache.find(emoji => emoji.id === "1081207365161979976")}`,
+                emoji: `<:valorant:1081207365161979976>`,
                 url: "https://cdn.discordapp.com/emojis/1081207365161979976.png"
             },
             Moderation: {
@@ -55,8 +55,8 @@ module.exports = {
                 url: "https://cdn.discordapp.com/emojis/1081204081709830155.png"
             },
             Reactionrole: {
-                emoji: "📄",
-                url: "https://cdn.discordapp.com/emojis/1081204089435729981.png"
+                emoji: `<:reactrole:1084934711178186862>`,
+                url: "https://cdn.discordapp.com/emojis/1084934711178186862.png"
             }
         }
 
