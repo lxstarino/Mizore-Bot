@@ -13,13 +13,19 @@ module.exports = {
         const guild_invites = await interaction.guild.invites.fetch()
         const description = interaction.guild.description
 
+        const BoostLevel = {
+            "0": `${interaction.guild.premiumSubscriptionCount}/2`,
+            "1": `${interaction.guild.premiumSubscriptionCount}/7`,
+            "2": `${interaction.guild.premiumSubscriptionCount}/14`,
+        }
+
         client.basicEmbed({
             type: "reply",
             thumbnail: `${interaction.guild.iconURL() || interaction.user.defaultAvatarURL}`,
             fields: [
                 { name: `${interaction.guild.name}`, value: `${description ? description : "No description provided"}`, inline: false},
                 { name: "Server Owner", value: `<@!${interaction.guild.ownerId}>`, inline: true},
-                { name: `Server Level (${interaction.guild.premiumTier})`, value: `Boosts: **${interaction.guild.premiumSubscriptionCount}**`, inline: true},  
+                { name: `Server Level (${interaction.guild.premiumTier})`, value: `Boosts: ${BoostLevel[interaction.guild.premiumTier]}`, inline: true},  
                 { name: "Created on", value: `🗓️ <t:${Math.round(interaction.guild.createdTimestamp / 1000)}:d>`, inline: true},    
                 { name: "Member Count", value: `**${interaction.guild.memberCount}** member(s)`, inline: true}, 
                 { name: "Invite Codes", value: `**${guild_invites.size}** code(s)`, inline: true},  
