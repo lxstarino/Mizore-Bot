@@ -12,7 +12,7 @@ module.exports = {
             if(!interaction.guild) return client.errEmbed({type: "reply", ephemeral: true, desc: `Bot commands are only available in servers`}, interaction)
             if(command.devOnly && !developers.includes(interaction.user.id)) return client.errEmbed({type: "reply", ephemeral: true, desc: `The /${command.data.name} command is only available for developers`}, interaction)
             if(command.nsfw && !interaction.channel.nsfw) return client.errEmbed({type: "reply", ephemeral: true, desc: `The /${command.data.name} command is only available in NSFW-Channel's`}, interaction)
-            if(command.cooldown){
+            if(command.cooldown && !developers.includes(interaction.user.id)){
                 if(command.cooldown.users.has(interaction.user.id)) return client.errEmbed({type: "reply", ephemeral: true, desc: `${command.cooldown.message}`}, interaction) 
                 command.cooldown.users.add(interaction.user.id)
                 setTimeout(() => {
