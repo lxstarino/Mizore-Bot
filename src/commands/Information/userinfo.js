@@ -12,10 +12,9 @@ module.exports = {
     .addUserOption((option) => option
         .setName("target")
         .setDescription("target")
-        .setRequired(true)
     ),
     async execute(client, interaction){
-        const target = interaction.options.get("target")
+        const target = interaction.options.get("target") || interaction
 
         const Badges = {
             "HypeSquadOnlineHouse1": `${client.emojis.cache.find(emoji => emoji.id === "1079634402704887858")}`,
