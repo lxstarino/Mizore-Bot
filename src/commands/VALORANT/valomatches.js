@@ -128,7 +128,6 @@ module.exports = {
                     }
                 }).filter(data => data.metadata.matchid === selected_match)
 
-                const length = `${Math.trunc(Math.round(match_data[0].metadata.game_length / 1000) / 60)}m ${Math.trunc(((Math.round(match_data[0].metadata.game_length / 1000) / 60) - (Math.round(match_data[0].metadata.game_length / 1000) / 60).toString().slice(0, 2)) * 60)}s`
 
                 client.basicEmbed({
                     type: "update",
@@ -137,7 +136,7 @@ module.exports = {
                     desc: `\`\`\`${match_data[0].metadata.game_start_patched}\`\`\``,
                     color: match_data[0].player.team == "Red" ? match_data[0].teams.red.has_won ? "#15a14a" : match_data[0].teams.blue.has_won ? "#ab1c15" : "#e37d10" : match_data[0].teams.blue.has_won ? "#15a14a" : match_data[0].teams.red.has_won ? "#ab1c15" : "#e37d10" || "#1e1e1e",
                     fields: [  
-                        {name: "Match length", value: `\`\`\`${length}\`\`\``, inline: true},        
+                        {name: "Match length", value: `\`\`\`${Math.trunc(Math.round(match_data[0].metadata.game_length / 1000) / 60)}m ${Math.trunc(((Math.round(match_data[0].metadata.game_length / 1000) / 60) - (Math.round(match_data[0].metadata.game_length / 1000) / 60).toString().slice(0, 2)) * 60)}s\`\`\``, inline: true},        
                         {name: "KDR", value: `\`\`\`${(match_data[0].player.stats.kills / match_data[0].player.stats.deaths).toFixed(2)}\`\`\``, inline: true},  
                         {name: "KDA", value: `\`\`\`${match_data[0].player.stats.kills}/${match_data[0].player.stats.deaths}/${match_data[0].player.stats.assists}\`\`\``, inline: true},  
                         {name: "Character", value: `\`\`\`${match_data[0].player.character}\`\`\``, inline: true},   
