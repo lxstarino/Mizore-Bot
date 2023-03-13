@@ -74,6 +74,7 @@ class valorant{
             .catch(() => {throw "An error occured while fetching Match Data"})
 
         if(Match_Data.status != 200) throw "Not able to contact API"
+        if(Match_Data.data.length == 0) throw "No matches found"
 
         return(Match_Data)
     }
