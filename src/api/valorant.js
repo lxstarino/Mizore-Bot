@@ -73,10 +73,7 @@ class valorant{
             .then(response => response.json())
             .catch(() => {throw "An error occured while fetching Match Data"})
 
-        if(Match_Data.status == "404") throw "Valorant Player not found"
-        if(Match_Data.status == "429") throw "Rate limited"
-        if(Match_Data.status == "400") throw "Not able to connect to API"
-        if(Match_Data.data.length == 0) throw "No Match Data found"
+        if(Match_Data.status != 200) throw "Not able to contact API"
 
         return(Match_Data)
     }
