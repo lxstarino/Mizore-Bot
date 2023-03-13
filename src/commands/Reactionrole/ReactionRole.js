@@ -91,6 +91,7 @@ module.exports = {
                                 })
                                 client.basicEmbed({
                                     type: "editReply",
+                                    thumbnail: "https://cdn.discordapp.com/emojis/1084934711178186862.png",
                                     title: "Self-Role Menu", 
                                     color: "#2b2d31",
                                     desc: `Mention a role you want to add to your self-role menu | Type \`send\` when your done\n\n**Roles in Menu**:\n${roles.map(role => "<@&" + role.id + ">")}`,
