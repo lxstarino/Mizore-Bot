@@ -76,7 +76,8 @@ module.exports = {
             const matchType = interaction.options.get("matchtype").value
 
             await interaction.deferReply()
-            const { data } = await valorant1.getMatchData(region, user, tagline, matchType)
+            const { data } = await valorant1.getMatchData(region, user, tagline, matchType) 
+            const p = data[0].players.red.find(data => data.name.toLowerCase() === user.toLowerCase() && data.tag.toLowerCase() === tagline.toLowerCase()) || data[0].players.blue.find(data => data.name.toLowerCase() === user.toLowerCase() && data.tag.toLowerCase() === tagline.toLowerCase())
 
             const match_select = (state) => [
                 new ActionRowBuilder()
@@ -98,11 +99,10 @@ module.exports = {
             const msg = await client.basicEmbed({
                 type: "editReply",
                 components: match_select(false),
-                title: `Valorant recent ${matchType} matches [${user}#${tagline}]`,
-                desc: "`Note: Interactable disables after 30 seconds`",
-                fields: [
-                    {name: "Select a Recent Match", value: "Max. 5 last Matches are shown."}
-                ]
+                image: `${p.assets.card.wide}`,
+                author: {name: `${p.name}#${p.tag}`,iconURL: `${p.assets.card.small}`},
+                title: `Valorant ${matchType} matches`,
+                desc: "Select a recent match - Max 5. last matches are shown\n`Note: Interactable disables after 30 seconds`",
             }, interaction)
 
             const col = msg.createMessageComponentCollector({filter: i => i.user.id === interaction.user.id, time: 30000})
