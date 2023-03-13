@@ -44,7 +44,7 @@ module.exports = {
             .setMinLength(3)
             .setRequired(true)
         ).addStringOption((option) => option
-            .setName("tag")
+            .setName("tagline")
             .setDescription("Players tagline")
             .setMaxLength(5)
             .setMinLength(3)
@@ -65,92 +65,91 @@ module.exports = {
         .addChoices(
             {name: "Competetive", value: "competitive"},
             {name: "Unrated", value: "unrated"},
-            {name: "Swiftplay", value: "swiftplay"}
+            {name: "Swiftplay", value: "swiftplay"},
+            {name: "Spike Rush", value: "spikerush"}
         )),
         async execute(client, interaction)
         {
             const user = interaction.options.get("username").value
-            const tagline = interaction.options.get("tag").value
+            const tagline = interaction.options.get("tagline").value
             const region = interaction.options.get("region").value
             const matchType = interaction.options.get("matchtype").value
 
             await interaction.deferReply()
-            const matchHistory = await valorant1.getMatchData(region, user, tagline, matchType)
+            const { data } = await valorant1.getMatchData(region, user, tagline, matchType)
 
-            const SelectMenu = (state) => [
+            const match_select = (state) => [
                 new ActionRowBuilder()
                 .addComponents(
                     new StringSelectMenuBuilder()
-                        .setCustomId(`${interaction.user.id}`)
-                        .setPlaceholder('Select a match')
+                        .setCustomId(`match_select`)
+                        .setPlaceholder("Select a Recent Match")
                         .setDisabled(state)
-                        .addOptions(
-                        matchHistory.data.map(data => {
+                        .addOptions(data.map(data => {
                             return {
                                 label: `${data.metadata.map} - ${data.metadata.mode}`,
                                 value: `${data.metadata.matchid}`,
                                 description: `Played at ${data.metadata.game_start_patched}`
                             }
-                        })
-                    )
+                        }))
                 )
             ]
 
-            const vl_msg = await client.basicEmbed({
+            const msg = await client.basicEmbed({
                 type: "editReply",
-                author: {name: `Matches requested by ${interaction.user.tag}`, iconURL: `${interaction.user.displayAvatarURL() || interaction.user.defaultAvatarURL}`},
-                components: SelectMenu(false),
+                components: match_select(false),
                 title: `Valorant recent ${matchType} matches [${user}#${tagline}]`,
-                desc: "`Note: Interactable disables after 20 seconds`",
+                desc: "`Note: Interactable disables after 30 seconds`",
                 fields: [
                     {name: "Select a Recent Match", value: "Max. 5 last Matches are shown."}
                 ]
             }, interaction)
 
-            const col = vl_msg.createMessageComponentCollector({filter: i => i.user.id === interaction.user.id, componentType: ComponentType.StringSelect, time: 20000 })
-            col.on("collect", async(i) => { 
-                const [selected] = i.values
+            const col = msg.createMessageComponentCollector({filter: i => i.user.id === interaction.user.id, time: 30000})
 
-                const match_data = await matchHistory.data.map(data => {
+            col.on("collect", (i) => { 
+                const [selected_match] = i.values
+                const match_data = data.map(data => {
+                    const teamA = data.players.red.map(player => {
+                        return(`${agent_emojis[player.character]} ${player.name}#${player.tag} \`\`\`KDA: ${player.stats.kills}/${player.stats.deaths}/${player.stats.assists} | KDR: ${(player.stats.kills / player.stats.deaths).toFixed(2)}\`\`\``)
+                    })
+
+                    const teamB = data.players.blue.map(player => {
+                        return(`${agent_emojis[player.character]} ${player.name}#${player.tag} \n\`\`\`KDA: ${player.stats.kills}/${player.stats.deaths}/${player.stats.assists} | KDR: ${(player.stats.kills / player.stats.deaths).toFixed(2)}\`\`\``)
+                    })
+
+
                     return{
                         metadata: data.metadata,
-                        team_a: data.players.red,
-                        team_b: data.players.blue,
+                        player: data.players.red.find(data => data.name.toLowerCase() === user.toLowerCase() && data.tag.toLowerCase() === tagline.toLowerCase()) || data.players.blue.find(data => data.name.toLowerCase() === user.toLowerCase() && data.tag.toLowerCase() === tagline.toLowerCase()),
+                        teamA: teamA,
+                        teamB: teamB,
                         teams: data.teams
-                    } 
-                }).filter(data => data.metadata.matchid === `${selected}`)
+                    }
+                }).filter(data => data.metadata.matchid === selected_match)
 
-                const team_a = match_data[0].team_a.map(player => {
-                    return(`${agent_emojis[player.character]} **${player.name}#${player.tag} | K/D/A: ${player.stats.kills}/${player.stats.deaths}/${player.stats.assists} | K/D: ${(player.stats.kills / player.stats.deaths).toFixed(2)}**`)
-                })
-
-                const team_b = match_data[0].team_b.map(player => {
-                    return(`${agent_emojis[player.character]} **${player.name}#${player.tag} | K/D/A: ${player.stats.kills}/${player.stats.deaths}/${player.stats.assists} | K/D: ${(player.stats.kills / player.stats.deaths).toFixed(2)}**`)
-                })
-            
-                const minutes = Math.round(match_data[0].metadata.game_length / 1000) / 60
-                const seconds = (minutes - minutes.toString().slice(0, 2)) * 60
+                const length = `${Math.trunc(Math.round(match_data[0].metadata.game_length / 1000) / 60)}m ${Math.trunc(((Math.round(match_data[0].metadata.game_length / 1000) / 60) - (Math.round(match_data[0].metadata.game_length / 1000) / 60).toString().slice(0, 2)) * 60)}s`
 
                 client.basicEmbed({
                     type: "update",
-                    author: {name: `Match requested by ${i.user.tag}`, iconURL: `${i.user.displayAvatarURL() || i.user.defaultAvatarURL}`},
-                    title: `(${match_data[0].metadata.region.toUpperCase()}) ${match_data[0].metadata.map} - ${match_data[0].metadata.mode} Match from ${user}#${tagline}`,
-                    desc: `Match-ID: ${match_data[0].metadata.matchid} (Patch: ${match_data[0].metadata.game_version.split("-")[1]})`,
-                    fields: [
-                        {name: "Match started", value: `<t:${match_data[0].metadata.game_start}:t>`, inline: true},
-                        {name: "Match length", value: `${Math.trunc(minutes)}m ${Math.trunc(seconds)}s`, inline: true},
-                        {name: "Server", value: `${match_data[0].metadata.cluster}`, inline: true},
-                        {name: "Team A Team B", value: `**${match_data[0].teams.red.rounds_won}**  :  **${match_data[0].teams.blue.rounds_won}**`, inline: true},
-                        {name: "Winner", value: `${match_data[0].teams.blue.has_won ? "Team B" : "Team A"}`, inline: true},
-                        {name: "Played rounds", value: `${match_data[0].metadata.rounds_played}`, inline: true},
-                        {name: "Team A", value: `${team_a.join("\n\n")}`, inline: false},
-                        {name: "Team B", value: `${team_b.join("\n\n")}`, inline: false}                       
-                    ]
+                    author: {name: `${match_data[0].player.name}#${match_data[0].player.tag}`,iconURL: `${match_data[0].player.assets.card.small}`},
+                    title: `[${match_data[0].metadata.region.toUpperCase()} - ${match_data[0].metadata.cluster}] ${match_data[0].metadata.mode} - ${match_data[0].metadata.map} | ${match_data[0].teams.red.rounds_won} : ${match_data[0].teams.blue.rounds_won}`, 
+                    desc: `\`\`\`${match_data[0].metadata.game_start_patched}\`\`\``,
+                    color: match_data[0].player.team == "Red" ? match_data[0].teams.red.has_won ? "#15a14a" : match_data[0].teams.blue.has_won ? "#ab1c15" : "#e37d10" : match_data[0].teams.blue.has_won ? "#15a14a" : match_data[0].teams.red.has_won ? "#ab1c15" : "#e37d10" || "#1e1e1e",
+                    fields: [  
+                        {name: "Match length", value: `\`\`\`${length}\`\`\``, inline: true},        
+                        {name: "KDR", value: `\`\`\`${(match_data[0].player.stats.kills / match_data[0].player.stats.deaths).toFixed(2)}\`\`\``, inline: true},  
+                        {name: "KDA", value: `\`\`\`${match_data[0].player.stats.kills}/${match_data[0].player.stats.deaths}/${match_data[0].player.stats.assists}\`\`\``, inline: true},  
+                        {name: "Character", value: `\`\`\`${match_data[0].player.character}\`\`\``, inline: true},   
+                        {name: "Econ Rating", value: `\`\`\`${Math.round(((match_data[0].player.damage_made / match_data[0].player.economy.spent.overall) * 1000))}\`\`\``, inline: true},   
+                        {name: "Headshot %", value: `\`\`\`${Math.round((match_data[0].player.stats.headshots / (match_data[0].player.stats.bodyshots + match_data[0].player.stats.legshots)) * 100)}%\`\`\``, inline: true},   
+                        {name: "Team Red", value: `${match_data[0].teamA.join("\n")}`, inline: true}, 
+                        {name: "Team Blue", value: `${match_data[0].teamB.join("\n")}`, inline: true}       
+                    ],
+                    footer: {text: `Match-ID: ${match_data[0].metadata.matchid}`},
                 }, i)
             })
-
-            col.on("ignore", async(i) => client.errEmbed({type: "reply", ephemeral: true, desc: `You cant use this menu.`}, i))
-            col.on("end", async() => await interaction.editReply({components: SelectMenu(true)}))
-                
+            col.on("end", () => interaction.editReply({components: match_select(true)}))
+            col.on("ignore", (i) => client.errEmbed({type: "reply", ephemeral: true, desc: "You cant use this menu"}, i))
         }
 }
